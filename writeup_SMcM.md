@@ -17,12 +17,12 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 [image1]: ./Report_Images/ImagestSample.png
 [image2]: ./Report_Images/ImageAnalysis.png
-[image2p]: ./Report_Images/1stSlide.jpg
+[image2p]: ./Report_Images/sub-samplng.png
 [image3]: ./Report_Images/sub-sampling2.png
 [image4]: ./Report_Images/pipeline.png
 [image5]: ./Report_Images/heats.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
+[image6]: ./Report_Images/IntegratedHeatmap.png
+[image7]: ./Report_Images/LabeledIntHeatmap.png
 [video1]: ./project_video.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
@@ -45,7 +45,7 @@ I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an 
 
 ![alt text][image1]
 
-I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
+I then explored different color spaces and set the different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
 Here is an example using the `HSV` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
@@ -78,7 +78,7 @@ In retrospect, instead of using "ALL", processing time may have been saved by us
 In section 2 of `trafficDetect.ipynb` trained a support vector machine (SVM) with radial basis function kernel using the scikit learn svm function as follows:
 `svc = svm.SVC(C=1.5, cache_size=250, class_weight=None, coef0=0.0, decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',max_iter=-1, probability=False, random_state=None, shrinking=True, tol=0.001, verbose=False)`
 
-I also tried C values of 0.5 and 1.1 but 1.5 seems to give the highest prediction accuracy.
+I also tried C values of 0.5 and 1.1 but 1.5 seemed to give the highest prediction accuracy.
 
 `Feature vector length: 6108
 358.84 Seconds to train svm...
@@ -88,7 +88,7 @@ It was at this point that I discovered that the values I was obtaining were just
 
 `svc = LinearSVC()`
 
-I had not commented the above section.  All my careful adjustments were meaningless.  I decided to use GridSearchCV to find the best algorithm.
+I had not commented out the above code line.  All my careful adjustments were meaningless.  I decided to use GridSearchCV to find the best algorithm.
 
 `from sklearn.model_selection import GridSearchCV`
 
@@ -109,23 +109,25 @@ Feature vector length: 6108
 156.22 Seconds to train svm...
 Test Accuracy of svm =  0.9918`
 
-I decided to return to LinearSVC which appeared to give a better result.  LinearSVC is an SVM implemented using the liblinear library. 
+I decided to return to LinearSVC which appeared to give a better result and is a faster linear SVM.  LinearSVC is an SVM implemented using the liblinear library. 
 
 ###Sliding Window Search
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-Having an excellent prediction result, I expected to get a very good result from a window search.  Instead, I was very disappointed with the result. 
+Having an excellent prediction result, I expected to get a very good result from a window search with a 50% overlap.  Instead, I was very disappointed with the result. 
 
 ![alt text][image2p]
 
 As can be seen, quite a number of vehicles were missed.
 
-I then implemented a series of scaled sub sampling window searchs in code section five of `trafficDetect.ipynb` as suggested here : https://discussions.udacity.com/t/prediction-excellent-but-actual-result-poor/381167/2.  
+I then implemented a series of scaled sub sampling window searchs in code section five of `trafficDetect.ipynb` as suggested here : https://discussions.udacity.com/t/prediction-excellent-but-actual-result-poor/381167/2 and instead of overlap implemented cell stepping  
 
 Using a range, I added values obtained at scale values of .75, 1, 1.25, 1.5 & 1.75.  Excluding false flags (of which there are a lot), this seems to identify most of the vehicles as shown below
 
 ![alt text][image3]
+
+It is now a case of sorting the false detections fromt he real detections.
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
@@ -160,11 +162,11 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ![alt text][image5]
 
-<!-- ### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
+ ### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
 ![alt text][image6]
 
 ### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7] -->
+![alt text][image7] 
 
 
 
