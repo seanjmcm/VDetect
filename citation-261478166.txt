@@ -1,0 +1,1 @@
+Goto, Yuhi & Yamauchi, Yuji & Fujiyoshi, Hironobu. (2013). CS-HOG: Color similarity-based HOG. FCV 2013 - Proceedings of the 19th Korea-Japan Joint Workshop on Frontiers of Computer Vision. 266-271. 10.1109/FCV.2013.6485502. 

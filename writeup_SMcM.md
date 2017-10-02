@@ -15,9 +15,10 @@ The goals / steps of this project are the following:
 * Estimate a bounding box for vehicles detected.
 
 [//]: # (Image References)
-[image1]: ./examples/car_not_car.png
-[image2]: ./examples/HOG_example.jpg
-[image3]: ./examples/sliding_windows.jpg
+[image1]: ./Report_Images/ImagestSample.png
+[image2]: ./Report_Images/ImageAnalysis.png
+[image2p]: ./Report_Images/1stSlide.jpg
+[image3]: ./Report_Images/sub-samplng.png
 [image4]: ./examples/sliding_window.jpg
 [image5]: ./examples/bboxes_and_heat.png
 [image6]: ./examples/labels_map.png
@@ -38,32 +39,62 @@ You're reading it!
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the first code cell of the IPython notebook of the file called `TrafficDetect.ipynb`).  
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
 
-I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
+I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
-
+Here is an example using the `HSV` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
 ![alt text][image2]
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and...
+I tried various combinations of parameters and in particular began to focus mainly on the color spaces, (RGB, HLS and HSV).  HSV looked the most promising and this view was reinforced by a paper I discoverd: 
+Goto, Yuhi & Yamauchi, et al. (2013). *CS-HOG: Color similarity-based HOG* FCV 2013 - Proceedings of the 19th Korea-Japan Joint Workshop on Frontiers of Computer Vision. 266-271. 
+
+I settled on the following parameters
+
+|Parameter      | Value     |
+|:-------------:|:---------:| 
+|color_space    | 'HSV'     |
+|orient         | 9         | 
+|pix_per_cell   | 8         |
+|cell_per_block |   2       | 
+|hog_channel    | "ALL"     |
+|spatial_size   | (16, 16)  |
+|hist_bins      | 16        |    
+|spatial_feat   | True      |
+|hist_feat      | True      |
+|hog_feat       | True      |
+
+In retrospect, instead of using "ALL", processing time may have been saved by using channel 3 only.
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using...
+In section 2 of `trafficDetect.ipynb` trained a support vector machine (SVM) with radial basis function kernel using the scikit learn svm function as follows:
+`svc = svm.SVC(C=1.5, cache_size=250, class_weight=None, coef0=0.0, decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',max_iter=-1, probability=False, random_state=None, shrinking=True, tol=0.001, verbose=False)`
+
+I also tried C values of 0.5 and 1.1 but 1.5 seems to give the highest prediction accuracy.
+
+`Feature vector length: 6108
+358.84 Seconds to train svm...
+Test Accuracy of svm =  0.9963`
 
 ###Sliding Window Search
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
+Having an excellent prediction result, I expected to get a very good result from a window search.  Instead, I was very diappointed with the result. 
+
+![alt text][image2p]
+
+As you can see, quite a number of vehicles were missed.
+
+I then implemented a sub sampling window search in code section five of `trafficDetect.ipynb`.  Using a range, I added values obtained at scale values of .75, 1, 1.25, 1.5, 1.75, 2 & 2.25.  Excluding false flags, this seems to identify most of the vehicles as shown below
 
 ![alt text][image3]
 
