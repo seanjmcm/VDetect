@@ -33,27 +33,28 @@ The goals / steps of this project are the following:
 
 ####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
 
-You're reading it!
 
 ###Histogram of Oriented Gradients (HOG)
 
-####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
+####1. Explain how extracted HOG features were extracted from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook of the file called `TrafficDetect.ipynb`).  
+The code for this step is contained in the first code cell of the jupyter notebook file called `TrafficDetect.ipynb`).  
 
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+I started by reading in all the `vehicle` and `non-vehicle` images from the .  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
 
-I then explored different color spaces and set the different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
+I explored different color spaces and set the different `skimage.hog()` parameters such as `orientations`, `cells_per_block`, and `pixels_per_cell`).  I then selected a vehicle image and a non vehicle image and ran the `skimage.feature` hog function on them
 
-Here is an example using the `HSV` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
+The following image illustrates the use of the `HSV` color space, in four instances: converted to grayscale and separated into its three constituent channels:  
 
 ![alt text][image2]
 
+The HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)`, `cells_per_block=(2, 2)` and `visualise=True` were used.  The visualization image appears to show that the 'S' channnel (channel 2) offers the best potential to effectively and efficiently extract HOG features from a vehicle.
+
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and in particular began to focus mainly on the color spaces, (RGB, HLS and HSV).  HSV looked the most promising and this view was reinforced by a paper I discoverd: 
+I tried various combinations of parameters and in particular focussed on the color spaces, (RGB, HLS and HSV).  HSV looked the most promising and this view was reinforced by a paper I discoverd: 
 Goto, Yuhi & Yamauchi, et al. (2013). *CS-HOG: Color similarity-based HOG* FCV 2013 - Proceedings of the 19th Korea-Japan Joint Workshop on Frontiers of Computer Vision. 266-271. 
 
 I settled on the following parameters
@@ -71,11 +72,11 @@ I settled on the following parameters
 |hist_feat      | True      |
 |hog_feat       | True      |
 
-In retrospect, instead of using "ALL", processing time may have been saved by using channel 3 only.
+In retrospect, instead of using "ALL", processing time may have been saved by using channel 2 only.
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-In section 2 of `trafficDetect.ipynb` trained a support vector machine (SVM) with radial basis function kernel using the scikit learn svm function as follows:
+In section 2 of `trafficDetect.ipynb` I trained a support vector machine (SVM) with radial basis function (rbf) kernel using the scikit learn svm function on the selected HOG features as follows:
 `svc = svm.SVC(C=1.5, cache_size=250, class_weight=None, coef0=0.0, decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',max_iter=-1, probability=False, random_state=None, shrinking=True, tol=0.001, verbose=False)`
 
 I also tried C values of 0.5 and 1.1 but 1.5 seemed to give the highest prediction accuracy.
@@ -84,7 +85,7 @@ I also tried C values of 0.5 and 1.1 but 1.5 seemed to give the highest predicti
 358.84 Seconds to train svm...
 Test Accuracy of svm =  0.9963`
 
-It was at this point that I discovered that the values I was obtaining were just random returns from
+It was at this point that I discovered that the values I was obtaining were just random returns from using
 
 `svc = LinearSVC()`
 
@@ -109,7 +110,7 @@ Feature vector length: 6108
 156.22 Seconds to train svm...
 Test Accuracy of svm =  0.9918`
 
-I decided to return to LinearSVC which appeared to give a better result and is a faster linear SVM.  LinearSVC is an SVM implemented using the liblinear library. 
+I decided to return to LinearSVC which appeared to give a better result and is a much faster linear SVM.  LinearSVC is an SVM implemented using the liblinear library. 
 
 ###Sliding Window Search
 
@@ -123,7 +124,7 @@ As can be seen, quite a number of vehicles were missed.
 
 I then implemented a series of scaled sub sampling window searchs in code section five of `trafficDetect.ipynb` as suggested here : https://discussions.udacity.com/t/prediction-excellent-but-actual-result-poor/381167/2 and instead of overlap implemented cell stepping  
 
-Using a range, I added values obtained at scale values of .75, 1, 1.25, 1.5 & 1.75.  Excluding false flags (of which there are a lot), this seems to identify most of the vehicles as shown below
+The following scale values of .75, 1, 1.25, 1.5 & 1.75 were used with a static window size of fulling horizontal width stating a height from the origin of 450 pixels and finishing at 700pixels from the origin .  Excluding false flags (of which there are a lot), this seems to identify most of the vehicles as shown below
 
 ![alt text][image3]
 
@@ -131,7 +132,21 @@ It is now a case of sorting the false detections fromt he real detections.
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on seven scales using HSV 3-channel HOG features plus spatially binned color and histograms of color in the feature vector.  As you can see in the previous image, there were considerable false flags. In order to mitigate this, I used the add_heat function developed in the module.
+Ultimately I searched on seven scales using HSV 3-channel HOG features plus spatially binned color and histograms of color in the feature vector.  
+
+The seven scales were as follows:
+
+* .75
+* 1.0
+* 1.25
+* 1.5
+* 1.75
+* 2.0
+* 2.25
+
+Including all the scales increases dramatically the likelihood of a vehicle discovery.
+
+As you can see in the previous image, there were considerable false flags. In order to mitigate this, I used the add_heat function developed in the module.
 
 ```def add_heat(heatmap, bbox_list):
     # Iterate through list of bboxes
@@ -141,7 +156,9 @@ Ultimately I searched on seven scales using HSV 3-channel HOG features plus spat
         heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
 ```
 
-This is a marked improvment as can be seen in the figure below, with it's corresponding heatmap.
+I set a threshold of 16 for the heatmap, `heatt = apply_threshold(heat,16)` , meaning that only pixels that were identified more than 16 times were retained. 
+
+This resulted in a marked improvment of vehicle recongition as can be seen in the figure below, with it's corresponding heatmap.
 ![alt text][image4]
 ---
 
@@ -154,18 +171,20 @@ Here's a [link to my video result](./project_video.mp4)
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+The positions of vehicle detections were recorded in each frame of the video.  A heatmap of the positive detections was generated.  As discussed in the previous section a threshold of 16 was set in order to identify vehicle positions and exclude false flags.  It was assumed that real vehicles would appear more than false flags.  Following this,  `scipy.ndimage.measurements.label()` was used to identify individual areas of interest in the heatmap and then each area was presumed to correspond to a vehicle.  Using the function `draw_labeled_bboxes`, boxes were drawn to cover the areas in which a vehicle was assumed to be present.
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
-### Here are six frames and their corresponding heatmaps:
-
 ![alt text][image5]
 
- ### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
+ ### Integrated heatmap from all six previous frames
+
+ Although not added to the video generation section.  The integrated heatmap of the previous 6 images with a 
 ![alt text][image6]
 
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
+### Resulting bounding boxes drawn onto the last frame in the series
+
+The resulting integrated heatmap was passed to the function `draw_labeled_bboxes` and appears on the last frame as shown below.
 ![alt text][image7] 
 
 
