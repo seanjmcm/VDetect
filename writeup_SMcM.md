@@ -18,9 +18,9 @@ The goals / steps of this project are the following:
 [image1]: ./Report_Images/ImagestSample.png
 [image2]: ./Report_Images/ImageAnalysis.png
 [image2p]: ./Report_Images/1stSlide.jpg
-[image3]: ./Report_Images/sub-samplng.png
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
+[image3]: ./Report_Images/sub-sampling2.png
+[image4]: ./Report_Images/pipeline.png
+[image5]: ./Report_Images/heats.png
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/output_bboxes.png
 [video1]: ./project_video.mp4
@@ -84,30 +84,69 @@ I also tried C values of 0.5 and 1.1 but 1.5 seems to give the highest predictio
 358.84 Seconds to train svm...
 Test Accuracy of svm =  0.9963`
 
+It was at this point that I discovered that the values I was obtaining were just random returns from
+
+`svc = LinearSVC()`
+
+I had not commented the above section.  All my careful adjustments were meaningless.  I decided to use GridSearchCV to find the best algorithm.
+
+`from sklearn.model_selection import GridSearchCV`
+
+`parameters = {'kernel':('linear', 'rbf'), 'C':[.5, 1, 1.5]}`
+
+`svc1 = svm.SVC()`
+
+`svc = GridSearchCV(svc1, parameters)`
+
+`svc.fit(X_train, y_train)`
+
+`print(svc.best_params_)`
+
+This revealed that C=0.5 and linear were the best parameters for the dataset.  Implementing these parameters yielded the following:
+
+`Using: 9 orientations 8 pixels per cell and 2 cells per block
+Feature vector length: 6108
+156.22 Seconds to train svm...
+Test Accuracy of svm =  0.9918`
+
+I decided to return to LinearSVC which appeared to give a better result.  LinearSVC is an SVM implemented using the liblinear library. 
+
 ###Sliding Window Search
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-Having an excellent prediction result, I expected to get a very good result from a window search.  Instead, I was very diappointed with the result. 
+Having an excellent prediction result, I expected to get a very good result from a window search.  Instead, I was very disappointed with the result. 
 
 ![alt text][image2p]
 
-As you can see, quite a number of vehicles were missed.
+As can be seen, quite a number of vehicles were missed.
 
-I then implemented a sub sampling window search in code section five of `trafficDetect.ipynb`.  Using a range, I added values obtained at scale values of .75, 1, 1.25, 1.5, 1.75, 2 & 2.25.  Excluding false flags, this seems to identify most of the vehicles as shown below
+I then implemented a series of scaled sub sampling window searchs in code section five of `trafficDetect.ipynb` as suggested here : https://discussions.udacity.com/t/prediction-excellent-but-actual-result-poor/381167/2.  
+
+Using a range, I added values obtained at scale values of .75, 1, 1.25, 1.5 & 1.75.  Excluding false flags (of which there are a lot), this seems to identify most of the vehicles as shown below
 
 ![alt text][image3]
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+Ultimately I searched on seven scales using HSV 3-channel HOG features plus spatially binned color and histograms of color in the feature vector.  As you can see in the previous image, there were considerable false flags. In order to mitigate this, I used the add_heat function developed in the module.
 
+```def add_heat(heatmap, bbox_list):
+    # Iterate through list of bboxes
+    for box in bbox_list:
+        # Add += 1 for all pixels inside each bbox
+        # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+```
+
+This is a marked improvment as can be seen in the figure below, with it's corresponding heatmap.
 ![alt text][image4]
 ---
 
 ### Video Implementation
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
+
 Here's a [link to my video result](./project_video.mp4)
 
 
@@ -121,11 +160,11 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ![alt text][image5]
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
+<!-- ### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
 ![alt text][image6]
 
 ### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
+![alt text][image7] -->
 
 
 
@@ -135,5 +174,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+There are a large number of false flags and also quite a large number of vehicles (on the other side of the road) that do not get detected.  The first thing to do would be to increase the size of the training set.  A running weighted moving average of the video would also help to smooth the detection window and remove false detections.
+
+In addition, the sub-sampling scheme could be improved with a better focus on matching scales with specific window areas.
 
