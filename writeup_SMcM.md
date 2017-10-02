@@ -144,7 +144,9 @@ The seven scales were as follows:
 * 2.0
 * 2.25
 
-Including all the scales increases dramatically the likelihood of a vehicle discovery.
+In order to optimize the classifier, I zoomed in on particular sections of the image window relating to the seven scales.
+
+Including all the scales increased dramatically the likelihood of a vehicle discovery.
 
 As you can see in the previous image, there were considerable false flags. In order to mitigate this, I used the add_heat function developed in the module.
 
@@ -155,7 +157,6 @@ As you can see in the previous image, there were considerable false flags. In or
         # Assuming each "box" takes the form ((x1, y1), (x2, y2))
         heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
 ```
-
 I set a threshold of 16 for the heatmap, `heatt = apply_threshold(heat,16)` , meaning that only pixels that were identified more than 16 times were retained. 
 
 This resulted in a marked improvment of vehicle recongition as can be seen in the figure below, with it's corresponding heatmap.
